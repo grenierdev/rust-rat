@@ -50,7 +50,8 @@ async fn transfer(mut inbound: TcpStream, client_addr: SocketAddr) -> Result<(),
             (child.stdin.take(), child.stdout.take(), child.stderr.take())
         {
             let mut child_out_err = child_out.chain(child_err);
-            let tcp_to_cmd = async {
+
+            let tcp_to_child = async {
                 tokio::io::copy(&mut tcp_in, &mut child_in).await?;
                 child_in.shutdown().await
             };
@@ -60,7 +61,7 @@ async fn transfer(mut inbound: TcpStream, client_addr: SocketAddr) -> Result<(),
                 tcp_out.shutdown().await
             };
 
-            tokio::try_join!(tcp_to_cmd, child_to_tcp)?;
+            tokio::try_join!(tcp_to_child, child_to_tcp)?;
         }
     }
 
